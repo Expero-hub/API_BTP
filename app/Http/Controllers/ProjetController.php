@@ -18,7 +18,7 @@ class ProjetController extends Controller
 
         return response()->json([
             'message' => 'Projet disponibles',
-            'Projets' => $projet
+            'projets' => $projet
         ], 200);
     }
 
@@ -26,34 +26,38 @@ class ProjetController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'lieu' => 'required|string|max:255',
-            'date_debut' => 'nullable|date',
-            'date_fin' => 'required|date',
-        ]);
+{
+    $request->validate([
+        'titre' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'lieu' => 'required|string|max:255',
+        'date_debut' => 'nullable|date',
+        'date_fin' => 'required|date',
+    ]);
 
-        $user = Auth::user();
+    $user = Auth::user();
 
-       
-        if (!$user->entreprise || !$user->entreprise->nom_entreprise || !$user->entreprise->IFU){
-            return response()->json(['message' => 'Veuillez completer votre profil.'], 403);
+    // Si l'utilisateur est une entreprise, on vérifie que son profil est complété
+    if ($user->hasRole('entreprise')) {
+        if (!$user->entreprise || !$user->entreprise->nom_entreprise || !$user->entreprise->IFU) {
+            return response()->json(['message' => 'Veuillez compléter votre profil entreprise.'], 403);
         }
-
-        $projet = Projet::create([
-            'titre' => $request->titre,
-            'description' => $request->description,
-            'lieu' => $request->lieu,
-            'date_debut' => $request->date_debut,
-            'date_fin' => $request->date_fin,
-            'entreprise_id' => $user->entreprise->id ?? null,
-            'client_id' => $user->client->id ?? null,
-        ]);
-
-        return response()->json(['message' => 'Projet créé avec succès.', 'projet' => $projet], 201);
     }
+
+    // Création du projet, on récupère les IDs si disponibles
+    $projet = Projet::create([
+        'titre' => $request->titre,
+        'description' => $request->description,
+        'lieu' => $request->lieu,
+        'date_debut' => $request->date_debut,
+        'date_fin' => $request->date_fin,
+        'entreprise_id' => $user->entreprise?->id,
+        'client_id' => $user->id,
+    ]);
+
+    return response()->json(['message' => 'Projet créé avec succès.', 'projet' => $projet], 201);
+}
+
 
     /**
      * Display the specified resource.
@@ -78,4 +82,18 @@ class ProjetController extends Controller
     {
         //
     }
+
+    public function projetOuverts(){
+         $projetsOuverts = Projet::whereNotNull('client_id') // créés par un client
+                             ->whereDoesntHave('entrepriseProjet') // pas encore assignés
+                             ->get();
+
+    return response()->json([
+        'projets_ouverts' => $projetsOuverts
+    ]);
+
+
+    }
+
+    
 }

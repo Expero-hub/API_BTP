@@ -14,7 +14,7 @@ class OffreStageController extends Controller
      */
     public function index()
     {
-        $offreStage = offreStage::where('date_limite', '>=', Carbon::today())->get();
+        $offreStage = OffreStage::where('date_limite', '>=', Carbon::today())->get();
 
         return response()->json([
             'message' => 'Offres disponibles',

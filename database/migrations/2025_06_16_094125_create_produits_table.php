@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('candidature_emplois', function (Blueprint $table) {
+        Schema::create('produits', function (Blueprint $table) {
             $table->id();
-            $table->string('cv');
-            $table->string('cip');
-            $table->foreignId('offre_emploi_id')->constrained('offre_emplois')->onDelete('cascade');
-            $table->foreignId('ouvrier_id')->constrained('ouvriers')->onDelete('cascade');
+            $table->string('nom');
+            $table->string('prix');
+            $table->text('description')->nullable;
+            $table->string('type')->nullable;
+            $table->string('photo');
+            $table->foreignId('partenaire_id')->constrained('partenaires')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('candidature_emplois');
+        Schema::dropIfExists('produits');
     }
 };

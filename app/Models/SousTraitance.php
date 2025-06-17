@@ -28,4 +28,10 @@ class SousTraitance extends Model
     public function entreprise_sous_triatante(){
        return $this->belongsTo(Entreprise::class, 'entreprise_sous_traitante_id');
     }
+
+     public function candidatureSousTraitance()
+    {
+        return $this->hasMany(CandidatureSousTraitance::class);
+    }
+
 }

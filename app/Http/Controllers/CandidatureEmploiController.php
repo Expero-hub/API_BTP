@@ -39,68 +39,96 @@ class CandidatureEmploiController extends Controller
     ]);
 }
 
+//les candidatures d'un ouvrier donné
+
+    public function mesCandidatures()
+    {
+        $user = Auth::user();
+        $candidatures = OffreEmploi::all();
+
+        return response()->json([
+            'message' => 'Vos candidatures',
+            'candidatures' => $candidatures
+        ], 200);
+        
+    }
+
+
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request, $offreId)
 {
-    try{
-         // Vérifier si l'utilisateur est authentifié
-         $user = Auth::user();
-            
-            
+    try {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non authentifié'], 401);
+        }
 
-         if (!$user) {
-             return response()->json(['message' => 'Utilisateur non authentifié'], 401);
-         }
-       
-
-        // Vérifie si le profil entreprise est complété
         if (!$user->ouvrier || !$user->ouvrier->metier || !$user->ouvrier->cv) {
-            //Log::info('profilcompletion');
             return response()->json([
-                'message' => 'Veuillez compléter votre profil entreprise avant de créer une offre.'
+                'message' => 'Veuillez compléter votre profil ouvrier avant de créer une offre.'
             ], 422);
-           
-        
         }
 
         $request->validate([
-            'cip' => 'required|string',
-            'cv' => 'required|string',
+            'cip' => 'required|file|mimes:jpg,jpeg,png,pdf,jfif|max:2048',
+            'cv' => 'required|file|mimes:jpg,jpeg,png,pdf,jfif|max:2048',
+            'diplome' => 'nullable|file|mimes:jpg,jpeg,png,pdf,jfif|max:2048',
         ]);
-        //logger($request->all()) ;
-    
-        $ouvrier = Auth::user(); // Si l'ouvrier est connecté
-    
-        // Vérifie si déjà candidaté
+
+        $ouvrier = $user;
+
         $existe = CandidatureEmploi::where('ouvrier_id', $ouvrier->id)
             ->where('offre_emploi_id', $offreId)
             ->exists();
-    
+
         if ($existe) {
             return response()->json(['message' => 'Vous avez déjà postulé à cette offre.'], 409);
         }
-    
+
+        $cipPath = $this->uploadDocument($request->file('cip'), 'cip');
+        $cvPath = $this->uploadDocument($request->file('cv'), 'cv');
+        $diplomePath = $this->uploadDocument($request->file('diplome'), 'diplome');
+
         $candidature = CandidatureEmploi::create([
             'ouvrier_id' => $ouvrier->id,
             'offre_emploi_id' => $offreId,
-            'cip' => $request->cip,
-            'cv' => $request->cv,
+            'cip' => $cipPath,
+            'cv' => $cvPath,
+            'diplome' => $diplomePath,
         ]);
-    
+        //logger("Candidature ID : " . $candidature->id);
+
+
         return response()->json([
             'message' => 'Candidature envoyée avec succès.',
             'candidature' => $candidature,
         ], 201);
-    }catch (\Exception $e) {
+
+    } catch (\Exception $e) {
         return response()->json([
             "message" => "Une erreur est survenue lors de votre postulation",
             "erreur" => $e->getMessage()
         ], 500);
     }
 }
+
+private function uploadDocument($file, $prefix = '')
+{
+    if (!$file) {
+        return null;
+    }
+
+    $extension = $file->getClientOriginalExtension();
+    $filename = $prefix . '_' . uniqid() . '.' . $extension;
+    $path = $file->storeAs('public/documents', $filename);
+
+    return $path;
+}
+
+
 
 
     /**
@@ -126,4 +154,51 @@ class CandidatureEmploiController extends Controller
     {
         //
     }
+    
+    //Accepter ou rejeter une candidature
+    public function accepter($id)
+{
+    
+    $candidature = CandidatureEmploi::find($id);
+
+    if (!$candidature) {
+        return response()->json(['message' => 'Candidature introuvable'], 404);
+    }
+
+    //s'assurer que l'acteur est bel et bien l'auteur de l'offre Expé 
+
+    if ($candidature->offre->entreprise_id !== Auth::id()) {
+    return response()->json(['message' => 'Action non autorisée. Vous n\'êtes pas l\'auteur de cette offre '], 403);
+}
+
+
+
+    $candidature->statut = 'acceptee';
+    $candidature->save();
+
+    return response()->json(['message' => 'Candidature acceptée avec succès', 'candidature' => $candidature]);
+}
+
+public function rejeter($id)
+{
+    $candidature = CandidatureEmploi::find($id);
+
+    if (!$candidature) {
+        return response()->json(['message' => 'Candidature introuvable'], 404);
+    }
+
+    //s'assurer que l'acteur est bel et bien l'auteur de l'offre Expé 
+
+    if ($candidature->offre->entreprise_id !== Auth::id()) {
+    return response()->json(['message' => 'Action non autorisée. Vous n\'êtes pas l\'auteur de cette offre '], 403);
+}
+
+
+
+    $candidature->statut = 'rejettee';
+    $candidature->save();
+
+    return response()->json(['message' => 'Candidature rejetée avec succès', 'candidature' => $candidature]);
+}
+
 }

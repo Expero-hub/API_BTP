@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\OffreEmploi;
+use App\Models\OffreStage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,12 +24,12 @@ class OffreEmploiController extends Controller
         ], 200);
         
     }
+
+    //les offres d'une entreprise
     public function mesOffreEmploi()
     {
         $user = Auth::user();
-        $offreEmploi = OffreEmploi::where('date_limite', '>=', Carbon::today())
-                                    ->where('entreprise_id', $user->id)
-                                    ->get();
+        $offreEmploi = OffreStage::all();
 
         return response()->json([
             'message' => 'Offres disponibles',
@@ -54,7 +55,7 @@ class OffreEmploiController extends Controller
             }
           
              // Vérifie si le profil entreprise est complété
-            if ($user->entreprise && !$user->entreprise->nom_entreprise || !$user->entreprise->IFU) {
+            if (!$user->entreprise || !$user->entreprise->nom_entreprise || !$user->entreprise->IFU) {
                 //Log::info('profilcompletion');
                 return response()->json([
                     'message' => 'Veuillez compléter votre profil entreprise avant de créer une offre.'

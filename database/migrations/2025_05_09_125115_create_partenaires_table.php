@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('partenaires', function (Blueprint $table) {
             $table->unsignedBigInteger('id')->primary(); // L’id est la clé primaire ici
             $table->string('secteur')->nullable();
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->string('adresse');
             $table->string('logo')->nullable();
             $table->string('contact');

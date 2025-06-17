@@ -15,8 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('cv');
             $table->string('cip');
+            $table->string('diplome')->nullable();
+             $table->string('lettre_motivation')->nullable();
+              $table->enum('statut', ['en_attente', 'acceptee', 'rejettee'])->default('en_attente');
             $table->foreignId('offre_stage_id')->constrained('offre_stages')->onDelete('cascade');
-            $table->foreignId('stagiaire_id')->constrained('stagiaire')->onDelete('cascade');
+            $table->foreignId('stagiaire_id')->constrained('stagiaires')->onDelete('cascade');
             $table->timestamps();
         });
     }

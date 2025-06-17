@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('candidature_sous_traitances', function (Blueprint $table) {
+        Schema::create('candidature_projets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sous_traitance_id')->constrained('sous_traitances')->onDelete('cascade');
             $table->foreignId('entreprise_id')->constrained('entreprises')->onDelete('cascade');
-            $table->text('motivation')->nullable();
-            $table->enum('statut', ['en_attente', 'acceptee', 'refusee'])->default('en_attente');
+            $table->foreignId('projet_id')->constrained('projets')->onDelete('cascade');
+            $table->string('motivation')->nullable();
+            $table->string('statut')->default('en_attente'); // en_attente, acceptee, refusee
             $table->timestamps();
-});
 
+            $table->unique(['entreprise_id', 'projet_id']); // postulation unique par entreprise
+        });
     }
 
     /**
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('candidature_sous_traitances');
+        Schema::dropIfExists('candidature_projets');
     }
 };

@@ -24,4 +24,15 @@ class Projet extends Model
     public function client(){
        return $this->belongsTo(Client::class, 'client_id');
     }
+
+    public function entrepriseProjet()
+{
+    return $this->hasOne(EntrepriseProjet::class, 'projet_id');
+}
+
+public function candidatures()
+{
+    return $this->hasMany(CandidatureProjet::class);
+}
+
 }

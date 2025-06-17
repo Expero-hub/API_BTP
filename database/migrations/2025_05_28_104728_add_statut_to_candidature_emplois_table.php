@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('candidature_stages', function (Blueprint $table) {
-            //  $table->string('cv');
-            //  $table->string('cip');
-            //  $table->string('diplome');
-            //  $table->string('lettre_motivation');
+        Schema::table('candidature_emplois', function (Blueprint $table) {
+            $table->enum('statut', ['en_attente', 'acceptee', 'rejettee'])->default('en_attente');
         });
     }
 
@@ -24,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('candidature_stage', function (Blueprint $table) {
+        Schema::table('candidature_emplois', function (Blueprint $table) {
             //
         });
     }
