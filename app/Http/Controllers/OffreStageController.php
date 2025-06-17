@@ -22,6 +22,28 @@ class OffreStageController extends Controller
         ], 200);
     }
 
+    //les offres d'une entreprise
+    public function mesOffreStage()
+    {
+         $entreprise = Auth::user();
+
+        // Vérifie que l'offre appartient bien à l'entreprise connectée
+        $offreStage = OffreStage::where('entreprise_id', $entreprise->id)->get();
+        if ($offreStage->isEmpty()) {
+            return response()->json([
+                'message' => "Offre introuvable ou non autorisée"
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Offres Stage disponibles',
+            'offre' => $offreStage
+        ], 200);
+        
+        
+    }
+
+
     /**
      * Store a newly created resource in storage.
      */

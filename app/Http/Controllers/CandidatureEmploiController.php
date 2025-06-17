@@ -39,6 +39,41 @@ class CandidatureEmploiController extends Controller
     ]);
 }
 
+//Les candidatures liées à une offre donnée
+
+    public function voirCandidaturesParOffre($id)
+    {
+        $entreprise = Auth::user();
+
+        // Vérifie que l'offre appartient bien à l'entreprise connectée
+        $offre = OffreEmploi::where('id', $id)
+            ->where('entreprise_id', $entreprise->id)
+            ->with('candidatureEmplois.ouvrier.user')
+            ->first();
+
+        if (!$offre) {
+            return response()->json([
+                'message' => "Aucune offre "
+            ], 404);
+        }
+
+        $candidatures = [];
+
+        foreach ($offre->candidatureEmplois as $candidature) {
+            $candidatures[] = [
+                'candidat_nom' => $candidature->ouvrier->user->nom ?? 'nom inconnu',
+                'candidat_prenom' => $candidature->ouvrier->user->prenom ?? 'prenom inconnu',
+                'date_candidature' => $candidature->created_at,
+                // Autres champs si nécessaire
+            ];
+        }
+
+        return response()->json([
+            'offre' => $offre->projet,
+            'candidatures' => $candidatures,
+        ]);
+    }
+
 //les candidatures d'un ouvrier donné
 
     public function mesCandidatures()

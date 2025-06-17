@@ -16,12 +16,12 @@ class CandidatureStageController extends Controller
     {
         $entreprise = Auth::user();
         // Récupère toutes les offres de cette entreprise
-        $offres = OffreStage::where('entreprise_id', $entreprise->id)->with('candidatureStage.stagiaire')->get();
+        $offres = OffreStage::where('entreprise_id', $entreprise->id)->with('candidatureStages.stagiaire')->get();
 
         $candidatures = [];
 
         foreach ($offres as $offre) {
-            foreach ($offre->candidatureStage as $candidature) {
+            foreach ($offre->candidatureStages as $candidature) {
                 $candidatures[] = [
                     'offre_titre' => $offre->domaine,
                     'candidat_nom' => $candidature->stagiaire->user->nom ?? 'nom inconnu',
@@ -37,9 +37,9 @@ class CandidatureStageController extends Controller
             'candidatures' => $candidatures,
         ]);
     }
-    //Les candidatures liées à une offre donnée
 
-    
+
+    //Les candidatures liées à une offre donnée
 
     public function voirCandidaturesParOffre($id)
     {
@@ -59,7 +59,7 @@ class CandidatureStageController extends Controller
 
         $candidatures = [];
 
-        foreach ($offre->candidatureStage as $candidature) {
+        foreach ($offre->candidatureStages as $candidature) {
             $candidatures[] = [
                 'candidat_nom' => $candidature->stagiaire->user->nom ?? 'nom inconnu',
                 'candidat_prenom' => $candidature->stagiaire->user->prenom ?? 'prenom inconnu',
@@ -81,7 +81,7 @@ class CandidatureStageController extends Controller
     public function mesCandidatures()
     {
         $user = Auth::user();
-        $candidatures = OffreStage::all();
+        $candidatures = CandidatureStage::all();
 
         return response()->json([
             'message' => 'Vos candidatures  Stage',
