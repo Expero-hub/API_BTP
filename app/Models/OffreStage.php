@@ -17,7 +17,7 @@ class OffreStage extends Model
     ];
 
 
-    public function candidatureStage()
+    public function candidatureStages()
     {
         return $this->hasMany(CandidatureStage::class);
     }

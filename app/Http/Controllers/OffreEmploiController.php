@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\OffreEmploi;
-use App\Models\OffreStage;
+
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,13 +28,22 @@ class OffreEmploiController extends Controller
     //les offres d'une entreprise
     public function mesOffreEmploi()
     {
-        $user = Auth::user();
-        $offreEmploi = OffreStage::all();
+         $entreprise = Auth::user();
+
+        // Vérifie que l'offre appartient bien à l'entreprise connectée
+        $offreEmploi = OffreEmploi::where('entreprise_id', $entreprise->id)->get();
+
+        if ($offreEmploi->isEmpty()) {
+            return response()->json([
+                'message' => "Offre introuvable ou non autorisée"
+            ], 404);
+        }
 
         return response()->json([
             'message' => 'Offres disponibles',
             'offre' => $offreEmploi
         ], 200);
+        
         
     }
 

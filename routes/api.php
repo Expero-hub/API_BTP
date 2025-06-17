@@ -73,10 +73,13 @@ Route::middleware('auth:sanctum')->group(function(){
         Route::get('/mesOffreEmploi', [OffreEmploiController::class, 'mesOffreEmploi']);
         Route::get('/candidaturesEmpoi', [CandidatureEmploiController::class, 'index']);
         Route::get('/ouvriers', [OuvrierController::class, 'index']);
+        Route::get('/candidatureParOffreEmploi/{id}', [CandidatureEmploiController::class, 'voirCandidaturesParOffre']);
+
 
          //Stage
         Route::post('/creer/offreStage', [OffreStageController::class, 'store']);
         Route::delete('/offreStage/{offreStage}', [OffreStageController::class, 'destroy']);
+        Route::get('/mesOffreStage', [OffreStageController::class, 'mesOffreStage']);
         Route::patch('/modifierStage/{offreStage}', [OffreStageController ::class, 'update']);
         Route::get('/candidatureStage', [CandidatureStageController::class, 'index']);
         Route::get('/candidatureParOffreStage/{id}', [CandidatureStageController::class, 'voirCandidaturesParOffre']);
