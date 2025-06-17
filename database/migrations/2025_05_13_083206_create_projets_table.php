@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('date_debut')->nullable();
             $table->string('date_fin');
             $table->foreignId('entreprise_id')->nullable()->constrained('entreprises')->onDelete('cascade');
-            $table->foreignId('client_id')->nullable()->constrained('clients')->onDelete('cascade');
+            $table->foreignId('client_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -14,6 +14,7 @@ class CandidatureStage extends Model
         'lettre_motivation',
         'offre_stage_id',
         'stagiaire_id',
+        'statut',
 
     ];
     public function stagiaire()
@@ -24,6 +25,6 @@ class CandidatureStage extends Model
 
     public function offre()
     {
-        return $this->belongsTo(OffreStage::class, 'offre_stagiaire_id');
+        return $this->belongsTo(OffreStage::class, 'offre_stage_id');
     }
 }

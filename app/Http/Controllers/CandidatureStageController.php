@@ -15,28 +15,42 @@ class CandidatureStageController extends Controller
     public function index()
     {
         $entreprise = Auth::user();
-    // Récupère toutes les offres de cette entreprise
-    $offres = OffreStage::where('entreprise_id', $entreprise->id)->with('candidatureStage.stagiaire')->get();
+        // Récupère toutes les offres de cette entreprise
+        $offres = OffreStage::where('entreprise_id', $entreprise->id)->with('candidatureStage.stagiaire')->get();
 
-    $candidatures = [];
+        $candidatures = [];
 
-    foreach ($offres as $offre) {
-        foreach ($offre->candidatureStage as $candidature) {
-            $candidatures[] = [
-                'offre_titre' => $offre->domaine,
-                'candidat_nom' => $candidature->stagiaire->user->nom ?? 'nom inconnu',
-                'candidat_prenom' => $candidature->stagiaire->user->prenom ?? 'prenom inconnu',
-                'date_candidature' => $candidature->created_at,
-                // Autres infos utiles ici...
-            ];
+        foreach ($offres as $offre) {
+            foreach ($offre->candidatureStage as $candidature) {
+                $candidatures[] = [
+                    'offre_titre' => $offre->domaine,
+                    'candidat_nom' => $candidature->stagiaire->user->nom ?? 'nom inconnu',
+                    'candidat_prenom' => $candidature->stagiaire->user->prenom ?? 'prenom inconnu',
+                    'date_candidature' => $candidature->created_at,
+                    // Autres infos utiles ici...
+                ];
+            }
         }
+
+        return response()->json([
+            'entreprise_id' => $entreprise->entreprise->nom_entreprise,
+            'candidatures' => $candidatures,
+        ]);
     }
 
-    return response()->json([
-        'entreprise_id' => $entreprise->entreprise->nom_entreprise,
-        'candidatures' => $candidatures,
-    ]);
+    //les candidatures d'un stagiaires donné 
+    public function mesCandidatures()
+    {
+        $user = Auth::user();
+        $candidatures = OffreStage::all();
+
+        return response()->json([
+            'message' => 'Vos candidatures',
+            'candidatures' => $candidatures
+        ], 200);
+        
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -65,10 +79,10 @@ class CandidatureStageController extends Controller
         }
 
         $request->validate([
-            'cip' => 'required|string',
-            'cv' => 'required|string',
-            'diplome' => 'required|string',
-            'lettre_motivation' => 'required|string',
+            'cip' => 'required|file|mimes:jpg,jpeg,png,pdf,jfif|max:2048',
+            'cv' => 'required|file|mimes:jpg,jpeg,png,pdf,jfif|max:2048',
+            'diplome' => 'nullable|file|mimes:jpg,jpeg,png,pdf,jfif|max:2048',
+            'lettre_motivation' => 'nullable|file|mimes:jpg,jpeg,png,pdf,jfif|max:2048',
         ]);
         //logger($request->all()) ;
     
@@ -83,13 +97,18 @@ class CandidatureStageController extends Controller
             return response()->json(['message' => 'Vous avez déjà postulé à cette offre.'], 409);
         }
     
+        $cipPath = $this->uploadDocument($request->file('cip'), 'cip');
+        $cvPath = $this->uploadDocument($request->file('cv'), 'cv');
+        $diplomePath = $this->uploadDocument($request->file('diplome'), 'diplome');
+        $lettrePath = $this->uploadDocument($request->file('lettre_motivation'), 'lettre_motivation');
+
         $candidature = CandidatureStage::create([
             'stagiaire_id' => $stagiaire->id,
             'offre_stage_id' => $offreId,
-            'cip' => $request->cip,
-            'cv' => $request->cv,
-            'diplome' => $request->diplome,
-            'lettre_motivation' => $request->lettre_motivation,
+            'cip' => $cipPath,
+            'cv' => $cvPath,
+            'diplome' => $diplomePath,
+            'lettre_motivation' => $lettrePath,
         ]);
     
         return response()->json([
@@ -103,6 +122,19 @@ class CandidatureStageController extends Controller
         ], 500);
     }
     }
+
+    private function uploadDocument($file, $prefix = '')
+{
+    if (!$file) {
+        return null;
+    }
+
+    $extension = $file->getClientOriginalExtension();
+    $filename = $prefix . '_' . uniqid() . '.' . $extension;
+    $path = $file->storeAs('public/documents', $filename);
+
+    return $path;
+}
 
     /**
      * Display the specified resource.
@@ -127,4 +159,50 @@ class CandidatureStageController extends Controller
     {
         //
     }
+
+    //Accepter ou rejeter une candidature
+    public function accepter($id)
+{
+    
+    $candidature = CandidatureStage::find($id);
+
+    if (!$candidature) {
+        return response()->json(['message' => 'Candidature introuvable'], 404);
+    }
+
+    //s'assurer que l'acteur est bel et bien l'auteur de l'offre Expé 
+
+    if ($candidature->offre->entreprise_id !== Auth::id()) {
+    return response()->json(['message' => 'Action non autorisée. Vous n\'êtes pas l\'auteur de cette offre '], 403);
+}
+
+
+
+    $candidature->statut = 'acceptee';
+    $candidature->save();
+
+    return response()->json(['message' => 'Candidature acceptée avec succès', 'candidature' => $candidature]);
+}
+
+public function rejeter($id)
+{
+    $candidature = CandidatureStage::find($id);
+
+    if (!$candidature) {
+        return response()->json(['message' => 'Candidature introuvable'], 404);
+    }
+
+    //s'assurer que l'acteur est bel et bien l'auteur de l'offre Expé 
+
+    if ($candidature->offre->entreprise_id !== Auth::id()) {
+    return response()->json(['message' => 'Action non autorisée. Vous n\'êtes pas l\'auteur de cette offre '], 403);
+}
+
+
+
+    $candidature->statut = 'rejettee';
+    $candidature->save();
+
+    return response()->json(['message' => 'Candidature rejetée avec succès', 'candidature' => $candidature]);
+}
 }

@@ -33,4 +33,15 @@ class Entreprise extends Model
     public function projets() {
         return $this->hasMany(Projet::class);
     }
+
+     public function candidatureSousTraitance()
+    {
+        return $this->hasMany(CandidatureSousTraitance::class);
+    }
+
+    public function candidatures()
+{
+    return $this->hasMany(CandidatureProjet::class);
+}
+
 }

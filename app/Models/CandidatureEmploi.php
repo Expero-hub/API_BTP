@@ -10,8 +10,10 @@ class CandidatureEmploi extends Model
         'id',
         'cv',
         'cip',
+        'diplome',
         'offre_emploi_id',
         'ouvrier_id',
+        'statut',
 
     ];
     public function ouvrier()
