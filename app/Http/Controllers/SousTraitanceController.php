@@ -67,8 +67,8 @@ class SousTraitanceController extends Controller
         //Décision de l'entreprise soustraitante
     public function repondreAssignation(Request $request, $sousTraitanceId)
 {
-    logger('le store');
-    logger([ $request->all()]);
+    // logger('le store');
+    // logger([ $request->all()]);
 
     $request->validate([
         'statut' => 'required|in:confirmee,refusee',

@@ -37,6 +37,45 @@ class CandidatureStageController extends Controller
             'candidatures' => $candidatures,
         ]);
     }
+    //Les candidatures liées à une offre donnée
+
+    
+
+    public function voirCandidaturesParOffre($id)
+    {
+        $entreprise = Auth::user();
+
+        // Vérifie que l'offre appartient bien à l'entreprise connectée
+        $offre = OffreStage::where('id', $id)
+            ->where('entreprise_id', $entreprise->id)
+            ->with('candidatureStage.stagiaire.user')
+            ->first();
+
+        if (!$offre) {
+            return response()->json([
+                'message' => "Offre introuvable ou non autorisée"
+            ], 404);
+        }
+
+        $candidatures = [];
+
+        foreach ($offre->candidatureStage as $candidature) {
+            $candidatures[] = [
+                'candidat_nom' => $candidature->stagiaire->user->nom ?? 'nom inconnu',
+                'candidat_prenom' => $candidature->stagiaire->user->prenom ?? 'prenom inconnu',
+                'date_candidature' => $candidature->created_at,
+                // Autres champs si nécessaire
+            ];
+        }
+
+        return response()->json([
+            'offre' => $offre->domaine,
+            'candidatures' => $candidatures,
+        ]);
+    }
+
+
+
 
     //les candidatures d'un stagiaires donné 
     public function mesCandidatures()
@@ -45,7 +84,7 @@ class CandidatureStageController extends Controller
         $candidatures = OffreStage::all();
 
         return response()->json([
-            'message' => 'Vos candidatures',
+            'message' => 'Vos candidatures  Stage',
             'candidatures' => $candidatures
         ], 200);
         

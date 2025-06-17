@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CandidatureSousTraitance;
+use App\Models\SousTraitance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,7 +14,28 @@ class CandidatureSousTraitanceController extends Controller
      */
     public function index()
     {
-        //
+        $entreprise = Auth::user();
+    // Récupère toutes les   taches de cette entreprise
+    $taches = SousTraitance::where('entreprise_maitre_id', $entreprise->id)->with('candidatureSousTraitance.entreprise')->get();
+
+    $candidatures = [];
+
+    foreach ($taches as $tache) {
+        foreach ($tache->candidatureSousTraitance as $candidature) {
+            $candidatures[] = [
+                'tache' => $tache->tache,
+                'candidat_nom' => $candidature->entreprise->user->nom ?? 'nom inconnu',
+                'candidat_prenom' => $candidature->entreprise->user->email ?? 'prenom inconnu',
+                'date_candidature' => $candidature->created_at,
+                // Autres infos utiles ici...
+            ];
+        }
+    }
+
+    return response()->json([
+        'entreprise_id' => $entreprise->entreprise->nom_entreprise,
+        'candidatures' => $candidatures,
+    ]);
     }
 
     /**
