@@ -15,8 +15,6 @@ use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\ProjetController;
 use App\Http\Controllers\SousTraitanceController;
 use App\Http\Controllers\StagiaireController;
-use App\Models\CandidatureEmploi;
-use App\Models\CandidatureSousTraitance;
 use Illuminate\Support\Facades\Route;
 
 
@@ -59,9 +57,8 @@ Route::get('/produits', [ProduitController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function(){
     //Admin
     Route::middleware('role:admin')->prefix('admin')->group(function () {
-        Route::post('/ajouter', [AuthController::class, 'store']);
         Route::get('/users', [AuthController::class, 'index']);
-        Route::delete('/users/{id}', [AuthController::class, 'destroy']);
+        Route::delete('/deleteUser/{id}', [AuthController::class, 'destroy']);
         Route::patch('/modifier/{id}', [AuthController ::class, 'update']);
         
     });
@@ -75,7 +72,6 @@ Route::middleware('auth:sanctum')->group(function(){
         Route::patch('/modifierEmploi/{offreEmploi}', [OffreEmploiController ::class, 'update']);
         Route::get('/mesOffreEmploi', [OffreEmploiController::class, 'mesOffreEmploi']);
         Route::get('/candidaturesEmpoi', [CandidatureEmploiController::class, 'index']);
-        Route::post('/completer', [OuvrierController::class, 'store']);
         Route::get('/ouvriers', [OuvrierController::class, 'index']);
 
          //Stage
@@ -83,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function(){
         Route::delete('/offreStage/{offreStage}', [OffreStageController::class, 'destroy']);
         Route::patch('/modifierStage/{offreStage}', [OffreStageController ::class, 'update']);
         Route::get('/candidatureStage', [CandidatureStageController::class, 'index']);
+        Route::get('/candidatureParOffreStage/{id}', [CandidatureStageController::class, 'voirCandidaturesParOffre']);
 
          //Sous-traitance
         Route::post('/creer/tache', [SousTraitanceController::class, 'store']);
@@ -90,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function(){
         Route::patch('/modifierTache/{sousTraitance}', [SousTraitanceController ::class, 'update']);
         Route::get('/candidatureTache', [CandidatureSousTraitanceController::class, 'index']);
         Route::get('/taches',  [SousTraitanceController::class, 'index']);
-        Route::PATCH('/tache/{tache}',  [SousTraitanceController::class, 'repondreAssignation']);
+        Route::PATCH('/accepterAssignation/{tache}',  [SousTraitanceController::class, 'repondreAssignation']);
         Route::post('/candidater/{tache}', [CandidatureSousTraitanceController::class, 'store']);
         Route::patch('/candidature_tache/accepter/{id}', [CandidatureSousTraitanceController::class, 'accepter'] );
         Route::patch('/candidature_tache/rejeter/{id}', [CandidatureSousTraitanceController::class, 'rejeter'] );
@@ -124,7 +121,7 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::middleware(['role:partenaire|admin'])->prefix('partenaire')->group(function () {
         Route::post('/produit/ajouter', [ProduitController::class, 'store']);
         Route::post('/completer', [PartenaireController::class, 'store']);
-        Route::get('/mesCandidatures', [CandidatureEmploiController::class, 'mesCandidatures']);
+       
         
         
     });
