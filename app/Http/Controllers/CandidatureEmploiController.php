@@ -79,7 +79,7 @@ class CandidatureEmploiController extends Controller
     public function mesCandidatures()
     {
         $user = Auth::user();
-        $candidatures = OffreEmploi::all();
+        $candidatures = CandidatureEmploi::where('ouvrier_id', $user->id)->get();
 
         return response()->json([
             'message' => 'Vos candidatures',
