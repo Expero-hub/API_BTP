@@ -22,6 +22,18 @@ class OffreStageController extends Controller
         ], 200);
     }
 
+    //Les 3 offres récentes 
+    public function offresRecentes()
+    {
+        // Récupère les 3 dernières offres d'emploi (ou moins si pas assez)
+        $offres = OffreStage::with('entreprise')->latest()->take(3)->get();
+
+        return response()->json([
+            'message' => 'Offres de stage récentes',
+            'offres' => $offres
+        ]);
+    }
+
     //les offres d'une entreprise
     public function mesOffreStage()
     {

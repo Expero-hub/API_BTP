@@ -12,9 +12,44 @@ class CandidatureProjetController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function voirCandidaturesParProjet($id)
     {
-        //
+        $client = Auth::user();
+
+        // Vérifie que le projet appartient bien au client connecté
+        $projet = Projet::where('id', $id)
+            ->where('client_id', $client->id)
+            ->with('candidatures.entreprise.user')
+            ->first();
+
+        if (!$projet) {
+            return response()->json([
+                'message' => "Aucun projet "
+            ], 404);
+        }
+
+        $Lescandidatures = [];
+
+        foreach ($projet->candidatures as $candidature) {
+           $Lescandidatures[] = $candidature;
+        }
+
+        return response()->json([
+            'projet' => $projet->titre,
+            'candidatures' => $Lescandidatures,
+        ]);
+    }
+
+    public function mesCandidatures()
+    {
+        $user = Auth::user();
+        $candidatures = CandidatureProjet::with('projet')->where('entreprise_id', $user->id)->get();
+
+        return response()->json([
+            'message' => 'Vos candidatures',
+            'candidatures' => $candidatures
+        ], 200);
+        
     }
 
     /**
@@ -71,6 +106,53 @@ class CandidatureProjetController extends Controller
         'message' => 'Postulation envoyée avec succès.',
         'candidature' => $candidature
     ]);
+}
+
+//Acceoter candidature d'une entreprise
+
+public function accepter($id)
+{
+    
+    $candidature = CandidatureProjet::find($id);
+
+    if (!$candidature) {
+        return response()->json(['message' => 'Candidature introuvable'], 404);
+    }
+
+    //s'assurer que l'acteur est bel et bien l'auteur du projet Expé 
+
+    if ($candidature->projet->client_id !== Auth::id()) {
+    return response()->json(['message' => 'Action non autorisée. Vous n\'êtes pas l\'auteur de cet projet '], 403);
+}
+
+
+
+    $candidature->statut = 'accepte';
+    $candidature->save();
+
+    return response()->json(['message' => 'Candidature acceptée avec succès', 'candidature' => $candidature]);
+}
+public function rejeter($id)
+{
+    
+    $candidature = CandidatureProjet::find($id);
+
+    if (!$candidature) {
+        return response()->json(['message' => 'Candidature introuvable'], 404);
+    }
+
+    //s'assurer que l'acteur est bel et bien l'auteur du projet Expé 
+
+    if ($candidature->projet->client_id !== Auth::id()) {
+    return response()->json(['message' => 'Action non autorisée. Vous n\'êtes pas l\'auteur de cet projet '], 403);
+}
+
+
+
+    $candidature->statut = 'refuse';
+    $candidature->save();
+
+    return response()->json(['message' => 'Candidature rejetée avec succès', 'candidature' => $candidature]);
 }
 
 

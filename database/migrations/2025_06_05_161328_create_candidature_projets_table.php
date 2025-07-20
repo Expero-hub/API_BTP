@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('entreprise_id')->constrained('entreprises')->onDelete('cascade');
             $table->foreignId('projet_id')->constrained('projets')->onDelete('cascade');
             $table->string('motivation')->nullable();
-            $table->string('statut')->default('en_attente'); // en_attente, acceptee, refusee
+           $table->enum('statut', ['en_attente', 'accepte', 'refuse'])->default('en_attente');
             $table->timestamps();
 
             $table->unique(['entreprise_id', 'projet_id']); // postulation unique par entreprise

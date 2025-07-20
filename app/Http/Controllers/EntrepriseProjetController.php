@@ -53,6 +53,23 @@ class EntrepriseProjetController extends Controller
     return response()->json(['message' => 'L’entreprise a été sollicitée. En attente de sa réponse.']);
     }
 
+    //Les projets assignés à une entreprise donnée
+    public function projetsAssignes()
+{
+    $user = Auth::user();
+
+    // On suppose que user_id = id de l'entreprise
+    $projets = EntrepriseProjet::with('projet')
+        ->where('entreprise_id', $user->id)
+        ->get();
+
+    return response()->json([
+        'message' => 'Projets assignés à' .''.$user->nom,
+        'data' => $projets
+    ]);
+}
+
+
     /**
      * Display the specified resource.
      */
@@ -84,24 +101,44 @@ class EntrepriseProjetController extends Controller
     {
         //
     }
-    public function repondreAssignation( $projetId)
-{
-    
+    public function accepterAssignation( $projetId)
+    {
+        
 
 
-    $user = Auth::user()->load('entreprise');
+        $user = Auth::user()->load('entreprise');
 
-    if (!$user->entreprise) {
-        return response()->json(['message' => 'Seule une entreprise peut répondre à une assignation.'], 403);
+        if (!$user->entreprise) {
+            return response()->json(['message' => 'Seule une entreprise peut répondre à une assignation.'], 403);
+        }
+
+
+        $prestation = EntrepriseProjet::where('id', $projetId)
+            ->where('entreprise_id', $user->entreprise->id)
+            ->firstOrFail();
+
+    $prestation->statut = 'accepte';
+        $prestation->save();
+        return response()->json(['message' => 'Projet accepté.']);
     }
+    public function refuserAssignation( $projetId)
+    {
+        
 
 
-    $prestation = EntrepriseProjet::where('id', $projetId)
-        ->where('entreprise_id', $user->entreprise->id)
-        ->firstOrFail();
+        $user = Auth::user()->load('entreprise');
 
-   $prestation->statut = 'accepte';
-    $prestation->save();
-    return response()->json(['message' => 'Projet accepté.']);
-}
+        if (!$user->entreprise) {
+            return response()->json(['message' => 'Seule une entreprise peut répondre à une assignation.'], 403);
+        }
+
+
+        $prestation = EntrepriseProjet::where('id', $projetId)
+            ->where('entreprise_id', $user->entreprise->id)
+            ->firstOrFail();
+
+    $prestation->statut = 'refuse';
+        $prestation->save();
+        return response()->json(['message' => 'Projet accepté.']);
+    }
 }

@@ -15,13 +15,29 @@ class SousTraitanceController extends Controller
      */
     public function index()
     {
-         $sousTraitance = SousTraitance::where('date_fin', '>=', Carbon::today())->get();
+        $taches = SousTraitance::with('projet.entreprise', 'entreprise_maitre.user')
+            ->where('mode', 'appel') 
+            ->where('date_fin', '>=', Carbon::today())
+            ->get();
 
         return response()->json([
-            'message' => 'Projet disponibles',
-            'Projets' => $sousTraitance
+            'message' => 'Tâches en mode appel disponibles',
+            'taches' => $taches
         ], 200);
     }
+
+    //Les taches créées par ul'entreprise connectée
+    public function mesTaches()
+{
+    $user = Auth::user();
+    
+    $taches = SousTraitance::where('entreprise_maitre_id', $user->id)
+        ->with(['projet', 'entreprise_sous_triatante'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return response()->json($taches);
+}
 
     /**
      * Store a newly created resource in storage.

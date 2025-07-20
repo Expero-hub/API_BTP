@@ -29,6 +29,10 @@ class Projet extends Model
 {
     return $this->hasOne(EntrepriseProjet::class, 'projet_id');
 }
+    public function taches()
+{
+    return $this->hasOne(SousTraitance::class, 'projet_id');
+}
 
 public function candidatures()
 {
