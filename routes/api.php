@@ -42,11 +42,15 @@ Route::get('/entreprises', [AuthController::class, 'entreprises']);
 Route::get('/offreEmploi', [OffreEmploiController::class, 'index']);
 
 Route::get('/offreEmploi/{offreEmploi}', [OffreEmploiController::class, 'show']);
+Route::get('/offreEmploiRecentes', [OffreEmploiController::class, 'offresRecentes']);
 Route::get('/offreStage', [OffreStageController::class, 'index']);
+Route::get('/offreStageRecentes', [OffreStageController::class, 'offresRecentes']);
+
 Route::get('/offreStage/{offreStage}', [OffreStageController::class, 'show']);
 Route::get('/entreprises/offres/{id}', [EntrepriseController::class, 'offresParEntreprise']);
 
-Route::get('/projets', [ProjetController::class, 'index']);
+
+Route::get('/projet/{id}', [ProjetController::class, 'show']);
 Route::get('/produits', [ProduitController::class, 'index']);
 
 
@@ -88,8 +92,11 @@ Route::middleware('auth:sanctum')->group(function(){
         Route::post('/creer/tache', [SousTraitanceController::class, 'store']);
         Route::delete('/supprimerTache/{sousTraitance}', [SousTraitanceController::class, 'destroy']);
         Route::patch('/modifierTache/{sousTraitance}', [SousTraitanceController ::class, 'update']);
-        Route::get('/candidatureTache', [CandidatureSousTraitanceController::class, 'index']);
+        Route::get('/candidatureTache/{id}', [CandidatureSousTraitanceController::class, 'voirCandidaturesParTache']);
+        Route::get('/mesCandidaturesTache', [CandidatureSousTraitanceController::class, 'mesCandidatures']);
         Route::get('/taches',  [SousTraitanceController::class, 'index']);
+        Route::get('/mesTaches',  [SousTraitanceController::class, 'mesTaches']);
+        
         Route::PATCH('/accepterAssignation/{tache}',  [SousTraitanceController::class, 'repondreAssignation']);
         Route::post('/candidater/{tache}', [CandidatureSousTraitanceController::class, 'store']);
         Route::patch('/candidature_tache/accepter/{id}', [CandidatureSousTraitanceController::class, 'accepter'] );
@@ -107,13 +114,22 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::middleware('role:entreprise|client')->prefix('projet')->group(function () {
         
         // Projet
+        Route::get('/entreprise/projets', [ProjetController::class, 'index']);
+        Route::get('/detail/projet/{id}', [ProjetController::class, 'show']);
         Route::post('/creer', [ProjetController::class, 'store']);
         Route::delete('/supprimer/{offreEmploi}', [ProjetController::class, 'destroy']);
         Route::patch('/modifier/{offreEmploi}', [ProjetController ::class, 'update']);
         Route::post('/entrepriseProjet', [EntrepriseProjetController::class, 'store']);
-        Route::PATCH('/accepterProjet/{projet}',  [EntrepriseProjetController::class, 'repondreAssignation']);
-        Route::get('/projetOuvert', [ProjetController::class, 'projetOuverts']);
+        Route::PATCH('/accepterProjet/{projet}',  [EntrepriseProjetController::class, 'accepterAssignation']);
+        Route::PATCH('/refuserProjet/{projet}',  [EntrepriseProjetController::class, 'refuserAssignation']);
+        Route::get('/projets/ouverts', [ProjetController::class, 'projetOuverts']);
         Route::post('/postuler/{projetId}',[CandidatureProjetController::class, 'postuler']);
+        Route::get('/client/projets',[ProjetController::class, 'projetsClient']);
+        Route::get('/projets/assignes',[EntrepriseProjetController::class, 'projetsAssignes']);
+        Route::get('/candidatureParProjet/{id}', [CandidatureProjetController::class, 'voirCandidaturesParProjet']);
+        Route::patch('/candidature_projet/accepter/{id}', [CandidatureProjetController::class, 'accepter']);
+        Route::patch('/candidature_projet/rejeter/{id}', [CandidatureProjetController::class, 'rejeter']);
+        Route::get('/mesCandidatures/Projets', [CandidatureProjetController::class, 'mesCandidatures']);
 
         
         
@@ -123,6 +139,8 @@ Route::middleware('auth:sanctum')->group(function(){
     //Partenaire
     Route::middleware(['role:partenaire|admin'])->prefix('partenaire')->group(function () {
         Route::post('/produit/ajouter', [ProduitController::class, 'store']);
+        Route::patch('/produit/modifier/{produit}', [ProduitController::class, 'update']);
+        Route::delete('/produit/supprimer/{produit}', [ProduitController::class, 'destroy']);
         Route::post('/completer', [PartenaireController::class, 'store']);
        
         

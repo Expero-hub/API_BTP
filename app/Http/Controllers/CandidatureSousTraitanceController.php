@@ -12,36 +12,64 @@ class CandidatureSousTraitanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+
+     //Les candidatures liées àà une tâche 
+    public function voirCandidaturesParTache($tacheId)
     {
         $entreprise = Auth::user();
-    // Récupère toutes les   taches de cette entreprise
-    $taches = SousTraitance::where('entreprise_maitre_id', $entreprise->id)->with('candidatureSousTraitance.entreprise')->get();
 
-    $candidatures = [];
+        // Vérifie que la tâche appartient bien à cette entreprise
+        $tache = SousTraitance::where('id', $tacheId)
+            ->where('entreprise_maitre_id', $entreprise->id)
+            ->with('candidatureSousTraitance.entreprise.user')
+            ->first();
 
-    foreach ($taches as $tache) {
+        if (!$tache) {
+            return response()->json([
+                'message' => 'Tâche introuvable ou non autorisée.',
+            ], 403);
+        }
+
+        $candidatures = [];
+
         foreach ($tache->candidatureSousTraitance as $candidature) {
             $candidatures[] = [
                 'tache' => $tache->tache,
+                'id' => $candidature->id,
                 'candidat_nom' => $candidature->entreprise->user->nom ?? 'nom inconnu',
-                'candidat_prenom' => $candidature->entreprise->user->email ?? 'prenom inconnu',
+                'candidat_email' => $candidature->entreprise->user->email ?? 'email inconnu',
                 'date_candidature' => $candidature->created_at,
-                // Autres infos utiles ici...
+                'statut' => $candidature->statut,
             ];
         }
+
+        return response()->json([
+            'tache' => $tache->tache,
+            'candidatures' => $candidatures,
+        ]);
     }
 
-    return response()->json([
-        'entreprise_id' => $entreprise->entreprise->nom_entreprise,
-        'candidatures' => $candidatures,
-    ]);
+//les candidatures d'une entreprise sous-traitante
+    public function mesCandidatures(){
+        $user =Auth::user();
+        $candidatures = CandidatureSousTraitance::with(['sousTraitance.entreprise_maitre','sousTraitance.projet'])
+        
+                                    ->where('entreprise_id', $user->id)
+                                    ->get() ;
+
+        return response()->json([
+            'message' => 'Candidatures récupérées avec succès',
+            'candidatures' => $candidatures,
+
+        ]);
     }
+
+
 
     /**
      * Store a newly created resource in storage.
      */
-public function store(Request $request, $sousTraitance)
+    public function store(Request $request, $sousTraitance)
     {
         try{
          // Vérifier si l'utilisateur est authentifié
@@ -141,7 +169,7 @@ public function store(Request $request, $sousTraitance)
 
     //Accepter candidature tache ou refuser
 
-    public function accepter($id)
+    public function     accepter($id)
 {
     
     $candidature = CandidatureSousTraitance::find($id);

@@ -44,4 +44,9 @@ class Entreprise extends Model
     return $this->hasMany(CandidatureProjet::class);
 }
 
+ public function entrepriseProjet()
+{
+    return $this->hasOne(EntrepriseProjet::class, 'entreprise_id');
+}
+
 }

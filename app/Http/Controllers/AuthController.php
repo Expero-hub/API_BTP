@@ -193,9 +193,10 @@ class AuthController extends Controller
             }
 
            
-            logger($data);
+            //logger($data);
         
             $user->update($data);
+            
         
             return response()->json([
                 'message' => 'Profil mis à jour avec succès.',

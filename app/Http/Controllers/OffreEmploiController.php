@@ -25,6 +25,19 @@ class OffreEmploiController extends Controller
         
     }
 
+    //Les 3 offres récentes 
+    public function offresRecentes()
+    {
+        // Récupère les 3 dernières offres d'emploi (ou moins si pas assez)
+        $offres = OffreEmploi::with('entreprise')->latest()->take(3)->get();
+
+        return response()->json([
+            'message' => 'Offres d\'emploi récentes',
+            'offres' => $offres
+        ]);
+    }
+
+
     //les offres d'une entreprise
     public function mesOffreEmploi()
     {
@@ -157,7 +170,7 @@ class OffreEmploiController extends Controller
         
             $offreEmploi->update($request->all());
             
-            logger($offreEmploi->all()) ;
+            
             // Retourner une réponse JSON
             return response()->json([
                 'message' => 'Projet  n°'. $offreEmploi->id .' de '.$offreEmploi->lieu .' mis à jour avec succès',
@@ -179,10 +192,8 @@ class OffreEmploiController extends Controller
     try {
         $user = Auth::user();
 
-        logger('Tentative de suppression', [
-            'entreprise_id' => $offreEmploi->entreprise_id,
-            'user_id' => $user->id,
-        ]);
+        
+     
 
         if ($offreEmploi->entreprise_id !== $user->id) {
             logger('Accès refusé', ['offre' => $offreEmploi]);

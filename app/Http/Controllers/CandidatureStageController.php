@@ -81,7 +81,7 @@ class CandidatureStageController extends Controller
     public function mesCandidatures()
     {
         $user = Auth::user();
-        $candidatures = CandidatureStage::all();
+        $candidatures = CandidatureStage::where('stagiaire_id', $user->id)->get();
 
         return response()->json([
             'message' => 'Vos candidatures  Stage',

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CandidatureProjet;
+use App\Models\EntrepriseProjet;
 use App\Models\Projet;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,13 +16,60 @@ class ProjetController extends Controller
      */
     public function index()
     {
-         $projet = Projet::where('date_fin', '>=', Carbon::today())->get();
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Non authentifié'], 401);
+        }
+
+        // 1. Projets créés par l'entreprise
+        $projetsCrees = Projet::where('entreprise_id', $user->id)
+            ->where('date_fin', '>=', Carbon::today())
+            ->get();
+
+        // 2. Projets assignés à l'entreprise
+        $idsProjetsAssignes = EntrepriseProjet::where('entreprise_id', $user->id)
+            ->where('statut', 'accepte')
+            ->pluck('projet_id');
+
+        $projetsAssignes = Projet::whereIn('id', $idsProjetsAssignes)
+            ->where('date_fin', '>=', Carbon::today())
+            ->get();
+
+        // 3. Projets client auxquels l'entreprise a postulé et accepté
+        $idsProjetsPostulesEtAcceptes = CandidatureProjet::where('entreprise_id', $user->id)
+            ->where('statut', 'accepte')
+            ->pluck('projet_id');
+
+        $projetsClientAcceptes = Projet::whereIn('id', $idsProjetsPostulesEtAcceptes)
+            ->where('date_fin', '>=', Carbon::today())
+            ->get();
+
+        // Fusionner les 3 collections
+        $tousLesProjets = $projetsCrees
+            ->merge($projetsAssignes)
+            ->merge($projetsClientAcceptes)
+            ->unique('id') // éviter les doublons
+            ->values();    // réindexer proprement
 
         return response()->json([
-            'message' => 'Projet disponibles',
-            'projets' => $projet
+            'message' => 'Projets disponibles',
+            'projets' => $tousLesProjets
         ], 200);
     }
+
+    //projets créés  par un client 
+    public function projetsClient(Request $request)
+{
+    $user = $request->user();
+    $projets = Projet::where('client_id', $user->id)->with('entrepriseProjet.entreprise')->get();
+
+    return response()->json([
+        'message' => 'Projets du client',
+        'data' => $projets
+    ]);
+}
+
 
     /**
      * Store a newly created resource in storage.
@@ -37,23 +86,28 @@ class ProjetController extends Controller
 
     $user = Auth::user();
 
-    // Si l'utilisateur est une entreprise, on vérifie que son profil est complété
-    if ($user->hasRole('entreprise')) {
-        if (!$user->entreprise || !$user->entreprise->nom_entreprise || !$user->entreprise->IFU) {
-            return response()->json(['message' => 'Veuillez compléter votre profil entreprise.'], 403);
-        }
-    }
-
-    // Création du projet, on récupère les IDs si disponibles
-    $projet = Projet::create([
+    $data = [
         'titre' => $request->titre,
         'description' => $request->description,
         'lieu' => $request->lieu,
         'date_debut' => $request->date_debut,
         'date_fin' => $request->date_fin,
-        'entreprise_id' => $user->entreprise?->id,
-        'client_id' => $user->id,
-    ]);
+    ];
+
+    if ($user->hasRole('entreprise')) {
+        // Vérification que le profil est bien complété
+        if (!$user->entreprise || !$user->entreprise->nom_entreprise || !$user->entreprise->IFU) {
+            return response()->json(['message' => 'Veuillez compléter votre profil entreprise.'], 403);
+        }
+
+        $data['entreprise_id'] = $user->entreprise->id;
+    } elseif ($user->hasRole('client')) {
+        $data['client_id'] = $user->id;
+    } else {
+        return response()->json(['message' => 'Utilisateur non autorisé à créer un projet.'], 403);
+    }
+
+    $projet = Projet::create($data);
 
     return response()->json(['message' => 'Projet créé avec succès.', 'projet' => $projet], 201);
 }
@@ -62,10 +116,16 @@ class ProjetController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Projet $projet)
-    {
-        //
-    }
+    public function show($id)
+{
+    $projet = Projet::with(['entreprise', 'taches'])
+                ->findOrFail($id);
+    return response()->json([
+        'message' => 'Détails du projet',
+        'data' => $projet
+    ]);
+}
+
 
     /**
      * Update the specified resource in storage.

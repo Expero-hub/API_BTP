@@ -11,6 +11,11 @@ class EntrepriseProjet extends Model
         'entreprise_id',
     ];
 
+    public function entreprise()
+{
+    return $this->belongsTo(Entreprise::class);
+}
+
     public function projet()
 {
     return $this->belongsTo(Projet::class, 'projet_id');
